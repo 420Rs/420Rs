@@ -55,6 +55,7 @@ async function fetchAll() {
         if (!res.ok) throw new Error("Failed to fetch");
         const data = await res.json();
         allResources = data || [];
+        allResources.forEach(r => r._fetched = true);
         allResources.sort((a, b) => new Date(b.date) - new Date(a.date));
         renderFilterChips();
         render();
@@ -66,11 +67,8 @@ async function fetchAll() {
 
 async function save(item) {
     try {
-        const isUpdate = item._fetched;
-        if (!isUpdate) item._fetched = true;
-
-        const method = item.savedId ? "PUT" : "POST";
-        const url = item.savedId ? `${API_URL}/${item.savedId}` : API_URL;
+        const method = item._fetched ? "PUT" : "POST";
+        const url = item._fetched ? `${API_URL}/${item.id}` : API_URL;
 
         const res = await fetch(url, {
             method,
@@ -258,6 +256,8 @@ function openLightbox(r) {
         if (item) {
             item.dl = (item.dl || 0) + 1;
             save(item);
+            // Updating UI instantly
+            dlBtn.innerHTML = `${item.dl} <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`;
         }
     });
 
