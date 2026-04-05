@@ -3,21 +3,7 @@
    Behance-style resource gallery
    Admin-only upload with password
    ============================================ */
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
-
-const firebaseConfig = {
-    apiKey: "AIzaSyBygx7d7f3qXNUSayjq_wORrQn2NOt6vqc",
-    authDomain: "rs-5d18b.firebaseapp.com",
-    projectId: "rs-5d18b",
-    storageBucket: "rs-5d18b.firebasestorage.app",
-    messagingSenderId: "816265397155",
-    appId: "1:816265397155:web:17ca1c4c0ffbd57dbb9016",
-    measurementId: "G-MD1M38NMG3"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const API_URL = "https://69d225325043d95be9717fa0.mockapi.io/420Rs";
 
 // Global resource cache
 let allResources = [];
@@ -63,15 +49,44 @@ const genId = () => Date.now().toString(36) + Math.random().toString(36).substr(
 function load() {
     return allResources;
 }
-// save() now updates a specific document instead of rewriting the whole array
+async function fetchAll() {
+    try {
+        const res = await fetch(API_URL);
+        if (!res.ok) throw new Error("Failed to fetch");
+        const data = await res.json();
+        allResources = data || [];
+        allResources.sort((a, b) => new Date(b.date) - new Date(a.date));
+        renderFilterChips();
+        render();
+        if (isAdmin) renderManage();
+    } catch (e) {
+        console.error("Fetch error", e);
+    }
+}
+
 async function save(item) {
     try {
-        await setDoc(doc(db, "resources", item.id), item);
+        const isUpdate = item._fetched;
+        if (!isUpdate) item._fetched = true;
+
+        const method = item.savedId ? "PUT" : "POST";
+        const url = item.savedId ? `${API_URL}/${item.savedId}` : API_URL;
+
+        const res = await fetch(url, {
+            method,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(item)
+        });
+        const savedItem = await res.json();
+        item.savedId = savedItem.id;
+        fetchAll();
     } catch (e) { console.error("Error saving doc", e); }
 }
-async function del(id) {
+
+async function del(mockApiId) {
     try {
-        await deleteDoc(doc(db, "resources", id));
+        await fetch(`${API_URL}/${mockApiId}`, { method: 'DELETE' });
+        fetchAll();
     } catch (e) { console.error("Error deleting doc", e); }
 }
 
@@ -86,7 +101,7 @@ function seed() {
         { id: genId(), name: 'VS Code Extensions Pack', cat: 'tool', desc: 'Top 20 extensions cho web developer 2026.', url: 'https://marketplace.visualstudio.com', tags: ['vscode', 'extensions'], thumb: '', dl: 432, date: new Date(Date.now() - 43200000).toISOString() },
         { id: genId(), name: 'Figma Dashboard UI Kit', cat: 'other', desc: 'Bộ component Figma cho dashboard — 50+ components.', url: 'https://figma.com/community', tags: ['figma', 'ui-kit', 'dashboard'], thumb: '', dl: 678, date: new Date(Date.now() - 86400000 * 7).toISOString() },
     ];
-    save(items);
+    items.forEach(save);
 }
 
 // ===== STATE =====
@@ -377,8 +392,7 @@ uploadForm.addEventListener('submit', e => {
         date: new Date().toISOString()
     };
 
-    const all = load();
-    save(newItem); // Saves to firestore directly
+    save(newItem);
 
     uploadForm.reset();
     thumbData = '';
@@ -387,8 +401,6 @@ uploadForm.addEventListener('submit', e => {
     dropArea.style.display = 'flex';
     thumbFile.value = '';
 
-    render();
-    renderManage();
     toast('Đã đăng tài nguyên!', 'success');
 });
 
@@ -451,9 +463,8 @@ function renderManage() {
             item.desc = form.querySelector('[data-field="desc"]').value.trim();
             item.url = form.querySelector('[data-field="url"]').value.trim();
             item.tags = form.querySelector('[data-field="tags"]').value.split(',').map(t => t.trim()).filter(Boolean);
-            save(item); // Update single doc in Firestore
+            save(item);
             editingId = null;
-            // No need to call render manually, onSnapshot will trigger
         });
     });
 
@@ -470,7 +481,7 @@ function renderManage() {
         btn.addEventListener('click', () => {
             const id = btn.dataset.del;
             if (!confirm('Xoá tài nguyên này?')) return;
-            del(id); // Delete from Firestore
+            del(id);
             toast('Đã xoá', 'info');
         });
     });
@@ -480,13 +491,13 @@ function renderManage() {
 function renderCatManager() {
     const cats = loadCats();
     catItems.innerHTML = Object.entries(cats).map(([k, v]) => `
-                < div class="manage-item" >
+      <div class="manage-item">
         <span class="manage-item-name"><strong>${esc(k)}</strong> → ${esc(v)}</span>
         <button class="manage-del" data-del-cat="${k}" title="Xoá">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
         </button>
-      </div >
-                `).join('');
+      </div>
+    `).join('');
 
     $$('[data-del-cat]').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -522,7 +533,7 @@ addCatBtn.addEventListener('click', () => {
 // ===== TOAST =====
 function toast(msg, type = 'info') {
     const el = document.createElement('div');
-    el.className = `toast toast - ${type} `;
+    el.className = `toast toast-${type}`;
     el.textContent = msg;
     toastBox.appendChild(el);
     setTimeout(() => { el.classList.add('removing'); setTimeout(() => el.remove(), 300); }, 2500);
@@ -538,16 +549,4 @@ document.addEventListener('keydown', e => {
 });
 
 // ===== INIT =====
-// seed(); -- No longer seeding to local storage.
-
-// Realtime Firebase Listener
-onSnapshot(collection(db, "resources"), (snapshot) => {
-    allResources = [];
-    snapshot.forEach(d => allResources.push(d.data()));
-    // Sort descending by date
-    allResources.sort((a, b) => new Date(b.date) - new Date(a.date));
-
-    renderFilterChips();
-    render();
-    if (isAdmin) renderManage();
-});
+fetchAll();
