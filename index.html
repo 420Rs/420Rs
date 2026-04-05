@@ -30,13 +30,7 @@
     <section class="filter-section" id="gallery">
         <div class="filter-inner">
             <div class="filter-chips" id="filterChips">
-                <button class="chip active" data-cat="all">All</button>
-                <button class="chip" data-cat="image">Images</button>
-                <button class="chip" data-cat="document">Docs</button>
-                <button class="chip" data-cat="code">Code</button>
-                <button class="chip" data-cat="video">Video</button>
-                <button class="chip" data-cat="tool">Tools</button>
-                <button class="chip" data-cat="other">Other</button>
+                <!-- JS renders dynamically -->
             </div>
             <div class="search-wrap">
                 <svg class="search-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -92,12 +86,7 @@
                 <input type="text" id="resName" class="input" placeholder="Tên tài nguyên" required>
                 <select id="resCat" class="input" required>
                     <option value="">Danh mục</option>
-                    <option value="image">Images</option>
-                    <option value="document">Docs</option>
-                    <option value="code">Code</option>
-                    <option value="video">Video</option>
-                    <option value="tool">Tools</option>
-                    <option value="other">Other</option>
+                    <!-- JS populates -->
                 </select>
                 <textarea id="resDesc" class="input" placeholder="Mô tả ngắn" rows="2"></textarea>
                 <input type="url" id="resUrl" class="input" placeholder="Link tải / URL" required>
@@ -128,9 +117,20 @@
                 <button type="submit" class="btn-primary btn-full">Đăng tài nguyên</button>
             </form>
 
+            <!-- Category Manager -->
+            <div class="manage-list" id="catManager" style="display:none;">
+                <h3>Danh mục</h3>
+                <div id="catItems"></div>
+                <div class="auth-row" style="margin-top:8px;">
+                    <input type="text" id="newCatKey" class="input" placeholder="key (vd: design)">
+                    <input type="text" id="newCatLabel" class="input" placeholder="Label (vd: Design)">
+                    <button class="btn-primary" id="addCatBtn" style="padding:9px 14px;">+</button>
+                </div>
+            </div>
+
             <!-- Manage existing -->
             <div class="manage-list" id="manageList" style="display:none;">
-                <h3>Quản lý</h3>
+                <h3>Tài nguyên</h3>
                 <div id="manageItems"></div>
             </div>
         </div>

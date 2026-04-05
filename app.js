@@ -17,10 +17,18 @@
         return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
     }
 
-    const CAT_LABELS = {
+    const DEFAULT_CATS = {
         image: 'Images', document: 'Docs', code: 'Code',
         video: 'Video', tool: 'Tools', other: 'Other'
     };
+    const CAT_STORAGE = 'rs420_categories';
+
+    function loadCats() {
+        try { const d = localStorage.getItem(CAT_STORAGE); return d ? JSON.parse(d) : { ...DEFAULT_CATS }; }
+        catch { return { ...DEFAULT_CATS }; }
+    }
+    function saveCats(cats) { localStorage.setItem(CAT_STORAGE, JSON.stringify(cats)); }
+    function getCatLabel(key) { const cats = loadCats(); return cats[key] || key; }
 
     const CAT_ICONS = {
         image: `<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`,
@@ -76,6 +84,9 @@
     const uploadForm = $('#uploadForm');
     const manageList = $('#manageList');
     const manageItems = $('#manageItems');
+    const catManager = $('#catManager');
+    const catItems = $('#catItems');
+    const addCatBtn = $('#addCatBtn');
     const dropArea = $('#dropArea');
     const thumbFile = $('#thumbFile');
     const thumbPreview = $('#thumbPreview');
@@ -92,6 +103,21 @@
     });
 
     // ===== FILTER & SEARCH =====
+    function renderFilterChips() {
+        const cats = loadCats();
+        filterChips.innerHTML = `<button class="chip ${filter === 'all' ? 'active' : ''}" data-cat="all">All</button>`
+            + Object.entries(cats).map(([k, v]) =>
+                `<button class="chip ${filter === k ? 'active' : ''}" data-cat="${k}">${esc(v)}</button>`
+            ).join('');
+    }
+
+    function renderCatSelect() {
+        const cats = loadCats();
+        const sel = $('#resCat');
+        sel.innerHTML = '<option value="">Danh mục</option>'
+            + Object.entries(cats).map(([k, v]) => `<option value="${k}">${esc(v)}</option>`).join('');
+    }
+
     filterChips.addEventListener('click', e => {
         const chip = e.target.closest('.chip');
         if (!chip) return;
@@ -129,8 +155,8 @@
         masonry.innerHTML = items.map((r, i) => {
             const hasThumb = !!r.thumb;
             const imgPart = hasThumb
-                ? `<div class="card-img"><img src="${r.thumb}" alt="${esc(r.name)}" loading="lazy"><div class="card-overlay"><span class="card-overlay-title">${esc(r.name)}</span><span class="card-overlay-cat">${CAT_LABELS[r.cat]}</span></div></div>`
-                : `<div class="card-img"><div class="card-img-placeholder">${CAT_ICONS[r.cat]}</div><div class="card-overlay"><span class="card-overlay-title">${esc(r.name)}</span><span class="card-overlay-cat">${CAT_LABELS[r.cat]}</span></div></div>`;
+                ? `<div class="card-img"><img src="${r.thumb}" alt="${esc(r.name)}" loading="lazy"><div class="card-overlay"><span class="card-overlay-title">${esc(r.name)}</span><span class="card-overlay-cat">${getCatLabel(r.cat)}</span></div></div>`
+                : `<div class="card-img"><div class="card-img-placeholder">${CAT_ICONS[r.cat]}</div><div class="card-overlay"><span class="card-overlay-title">${esc(r.name)}</span><span class="card-overlay-cat">${getCatLabel(r.cat)}</span></div></div>`;
 
             return `
         <div class="card" data-id="${r.id}" style="animation: slideUp 0.5s cubic-bezier(0.16,1,0.3,1) ${i * 0.04}s both">
@@ -138,7 +164,7 @@
           <div class="card-info">
             <div class="card-title">${esc(r.name)}</div>
             <div class="card-meta">
-              <span class="card-cat">${CAT_LABELS[r.cat]}</span>
+              <span class="card-cat">${getCatLabel(r.cat)}</span>
               <span class="card-dl">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 ${r.dl}
@@ -201,8 +227,20 @@
     // ===== ADMIN PANEL (Secret: type '420' to open) =====
     function openAdmin() {
         adminOverlay.classList.add('open');
-        if (isAdmin) { authGate.style.display = 'none'; uploadForm.style.display = 'flex'; manageList.style.display = 'block'; renderManage(); }
-        else { authGate.style.display = 'block'; uploadForm.style.display = 'none'; manageList.style.display = 'none'; }
+        if (isAdmin) {
+            authGate.style.display = 'none';
+            uploadForm.style.display = 'flex';
+            manageList.style.display = 'block';
+            catManager.style.display = 'block';
+            renderManage();
+            renderCatManager();
+            renderCatSelect();
+        } else {
+            authGate.style.display = 'block';
+            uploadForm.style.display = 'none';
+            manageList.style.display = 'none';
+            catManager.style.display = 'none';
+        }
     }
 
     // Secret key sequence: type '420' anywhere on page
@@ -247,7 +285,10 @@
             authGate.style.display = 'none';
             uploadForm.style.display = 'flex';
             manageList.style.display = 'block';
+            catManager.style.display = 'block';
             renderManage();
+            renderCatManager();
+            renderCatSelect();
             toast('Admin mode unlocked', 'success');
         } else {
             toast('Sai mật khẩu!', 'error');
@@ -351,7 +392,48 @@
         });
     }
 
+    // ===== CATEGORY MANAGER =====
+    function renderCatManager() {
+        const cats = loadCats();
+        catItems.innerHTML = Object.entries(cats).map(([k, v]) => `
+      <div class="manage-item">
+        <span class="manage-item-name"><strong>${esc(k)}</strong> → ${esc(v)}</span>
+        <button class="manage-del" data-del-cat="${k}" title="Xoá">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        </button>
+      </div>
+    `).join('');
 
+        $$('[data-del-cat]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const key = btn.dataset.delCat;
+                if (!confirm(`Xoá danh mục "${key}"?`)) return;
+                const cats = loadCats();
+                delete cats[key];
+                saveCats(cats);
+                renderCatManager();
+                renderFilterChips();
+                renderCatSelect();
+                toast('Đã xoá danh mục', 'info');
+            });
+        });
+    }
+
+    addCatBtn.addEventListener('click', () => {
+        const key = $('#newCatKey').value.trim().toLowerCase().replace(/\s+/g, '-');
+        const label = $('#newCatLabel').value.trim();
+        if (!key || !label) { toast('Nhập đủ key và label!', 'error'); return; }
+        const cats = loadCats();
+        if (cats[key]) { toast('Danh mục đã tồn tại!', 'error'); return; }
+        cats[key] = label;
+        saveCats(cats);
+        $('#newCatKey').value = '';
+        $('#newCatLabel').value = '';
+        renderCatManager();
+        renderFilterChips();
+        renderCatSelect();
+        toast('Đã thêm danh mục!', 'success');
+    });
 
     // ===== TOAST =====
     function toast(msg, type = 'info') {
@@ -373,6 +455,7 @@
 
     // ===== INIT =====
     seed();
+    renderFilterChips();
     render();
 
 })();
