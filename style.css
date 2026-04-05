@@ -264,13 +264,13 @@ img {
 }
 
 .masonry {
-    columns: 4;
-    column-gap: 16px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
 }
 
 .card {
-    break-inside: avoid;
-    margin-bottom: 16px;
+    border-radius: var(--radius);
     border-radius: var(--radius);
     overflow: hidden;
     background: var(--bg-card);
@@ -288,6 +288,7 @@ img {
 
 .card-img {
     width: 100%;
+    aspect-ratio: 16/9;
     display: block;
     background: var(--bg-elevated);
     position: relative;
@@ -309,7 +310,8 @@ img {
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 160px;
+    width: 100%;
+    height: 100%;
     color: var(--text-dim);
     background: linear-gradient(145deg, var(--bg-elevated), var(--bg-card));
 }
