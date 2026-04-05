@@ -205,16 +205,32 @@
         else { authGate.style.display = 'block'; uploadForm.style.display = 'none'; manageList.style.display = 'none'; }
     }
 
-    // Secret key sequence: type '420'
+    // Secret key sequence: type '420' anywhere on page
     let secretBuf = '';
     let secretTimer = null;
-    document.addEventListener('keypress', e => {
+    document.addEventListener('keydown', e => {
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
-        secretBuf += e.key;
-        clearTimeout(secretTimer);
-        secretTimer = setTimeout(() => { secretBuf = ''; }, 1500);
-        if (secretBuf.includes('420')) {
-            secretBuf = '';
+        if (e.key >= '0' && e.key <= '9') {
+            secretBuf += e.key;
+            clearTimeout(secretTimer);
+            secretTimer = setTimeout(() => { secretBuf = ''; }, 2000);
+            if (secretBuf.includes('420')) {
+                secretBuf = '';
+                openAdmin();
+            }
+        }
+    });
+
+    // Also: click logo 5 times quickly to open admin
+    let logoClicks = 0;
+    let logoTimer = null;
+    document.querySelector('.logo').addEventListener('click', e => {
+        e.preventDefault();
+        logoClicks++;
+        clearTimeout(logoTimer);
+        logoTimer = setTimeout(() => { logoClicks = 0; }, 2000);
+        if (logoClicks >= 5) {
+            logoClicks = 0;
             openAdmin();
         }
     });
