@@ -62,7 +62,6 @@
     const searchInput = $('#searchInput');
     const filterChips = $('#filterChips');
     const adminOverlay = $('#adminOverlay');
-    const adminToggle = $('#adminToggle');
     const adminClose = $('#adminClose');
     const authGate = $('#authGate');
     const authBtn = $('#authBtn');
@@ -192,13 +191,29 @@
     lbClose.addEventListener('click', () => lightbox.classList.remove('open'));
     lightbox.addEventListener('click', e => { if (e.target === lightbox) lightbox.classList.remove('open'); });
 
-    // ===== ADMIN PANEL =====
-    adminToggle.addEventListener('click', e => {
-        e.preventDefault();
+    // ===== ADMIN PANEL (Secret: type '420' to open) =====
+    function openAdmin() {
         adminOverlay.classList.add('open');
         if (isAdmin) { authGate.style.display = 'none'; uploadForm.style.display = 'flex'; manageList.style.display = 'block'; renderManage(); }
         else { authGate.style.display = 'block'; uploadForm.style.display = 'none'; manageList.style.display = 'none'; }
+    }
+
+    // Secret key sequence: type '420'
+    let secretBuf = '';
+    let secretTimer = null;
+    document.addEventListener('keypress', e => {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
+        secretBuf += e.key;
+        clearTimeout(secretTimer);
+        secretTimer = setTimeout(() => { secretBuf = ''; }, 1500);
+        if (secretBuf.includes('420')) {
+            secretBuf = '';
+            openAdmin();
+        }
     });
+
+    // Also open via URL hash: #admin
+    if (window.location.hash === '#admin') openAdmin();
     adminClose.addEventListener('click', () => adminOverlay.classList.remove('open'));
     adminOverlay.addEventListener('click', e => { if (e.target === adminOverlay) adminOverlay.classList.remove('open'); });
 
@@ -328,6 +343,7 @@
         if (e.key === 'Escape') {
             adminOverlay.classList.remove('open');
             lightbox.classList.remove('open');
+            history.replaceState(null, '', window.location.pathname);
         }
     });
 
