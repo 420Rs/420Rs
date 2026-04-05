@@ -342,53 +342,6 @@ authBtn.addEventListener('click', async () => {
 });
 
 adminPass.addEventListener('keydown', e => { if (e.key === 'Enter') authBtn.click(); });
-
-// ===== THUMBNAIL =====
-dropArea.addEventListener('click', () => thumbFile.click());
-dropArea.addEventListener('dragover', e => { e.preventDefault(); dropArea.classList.add('over'); });
-dropArea.addEventListener('dragleave', () => dropArea.classList.remove('over'));
-dropArea.addEventListener('drop', e => {
-    e.preventDefault(); dropArea.classList.remove('over');
-    const f = e.dataTransfer.files[0];
-    if (f && f.type.startsWith('image/')) processThumb(f);
-});
-thumbFile.addEventListener('change', e => { if (e.target.files[0]) processThumb(e.target.files[0]); });
-
-function processThumb(file) {
-    if (file.size > 5 * 1024 * 1024) { toast('File quá lớn (max 5MB)', 'error'); return; }
-
-    // Nén ảnh để giảm dung lượng file xuống cực nhẹ (tránh lỗi MockAPI payload limit)
-    const img = new Image();
-    const reader = new FileReader();
-    reader.onload = e => { img.src = e.target.result; };
-    img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const MAX_WIDTH = 400; // Resize cực nhỏ
-        let width = img.width;
-        let height = img.height;
-        if (width > MAX_WIDTH) { height = height * (MAX_WIDTH / width); width = MAX_WIDTH; }
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, width, height);
-
-        // Tỷ lệ nén siêu cao 50%
-        thumbData = canvas.toDataURL('image/jpeg', 0.5);
-        thumbImg.src = thumbData;
-        thumbPreview.style.display = 'inline-block';
-        dropArea.style.display = 'none';
-    };
-    reader.readAsDataURL(file);
-}
-
-removeThumb.addEventListener('click', () => {
-    thumbData = '';
-    thumbImg.src = '';
-    thumbPreview.style.display = 'none';
-    dropArea.style.display = 'flex';
-    thumbFile.value = '';
-});
-
 // ===== UPLOAD FORM =====
 uploadForm.addEventListener('submit', e => {
     e.preventDefault();
@@ -397,6 +350,7 @@ uploadForm.addEventListener('submit', e => {
     const desc = $('#resDesc').value.trim();
     const url = $('#resUrl').value.trim();
     const tagsRaw = $('#resTags').value.trim();
+    const thumbUrl = $('#thumbUrl').value.trim();
 
     if (!name || !cat || !url) { toast('Điền đủ thông tin bắt buộc!', 'error'); return; }
 
@@ -404,7 +358,7 @@ uploadForm.addEventListener('submit', e => {
         id: genId(),
         name, cat, desc, url,
         tags: tagsRaw ? tagsRaw.split(',').map(t => t.trim()).filter(Boolean) : [],
-        thumb: thumbData,
+        thumb: thumbUrl,
         dl: 0,
         date: new Date().toISOString()
     };
@@ -412,12 +366,6 @@ uploadForm.addEventListener('submit', e => {
     save(newItem);
 
     uploadForm.reset();
-    thumbData = '';
-    thumbImg.src = '';
-    thumbPreview.style.display = 'none';
-    dropArea.style.display = 'flex';
-    thumbFile.value = '';
-
     toast('Đã đăng tài nguyên!', 'success');
 });
 

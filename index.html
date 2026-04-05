@@ -93,26 +93,7 @@
                 <input type="text" id="resTags" class="input" placeholder="Tags (vd: react, free, tool)">
 
                 <!-- Thumbnail -->
-                <div class="drop-area" id="dropArea">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="1.5">
-                        <rect x="3" y="3" width="18" height="18" rx="2" />
-                        <circle cx="8.5" cy="8.5" r="1.5" />
-                        <polyline points="21 15 16 10 5 21" />
-                    </svg>
-                    <span>Kéo thả thumbnail hoặc <u>chọn file</u></span>
-                    <input type="file" id="thumbFile" accept="image/*" hidden>
-                </div>
-                <div class="thumb-preview" id="thumbPreview" style="display:none;">
-                    <img id="thumbImg" alt="thumb">
-                    <button type="button" class="remove-thumb" id="removeThumb">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2">
-                            <line x1="18" y1="6" x2="6" y2="18" />
-                            <line x1="6" y1="6" x2="18" y2="18" />
-                        </svg>
-                    </button>
-                </div>
+                <input type="url" id="thumbUrl" class="input" placeholder="Link ảnh Thumbnail (Imgur, Drive...)">
 
                 <button type="submit" class="btn-primary btn-full">Đăng tài nguyên</button>
             </form>
