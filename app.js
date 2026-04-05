@@ -8,7 +8,14 @@
 
     // ===== CONFIG =====
     const STORAGE_KEY = 'rs420_resources';
-    const ADMIN_PASS = '420admin'; // Change this to your password
+    const ADMIN_HASH = '6e363367f53e2c4e9d445e072f0ae3640046544747d58f00bee1c2d163607092';
+
+    // SHA-256 hash function (Web Crypto API)
+    async function sha256(text) {
+        const data = new TextEncoder().encode(text);
+        const buf = await crypto.subtle.digest('SHA-256', data);
+        return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+    }
 
     const CAT_LABELS = {
         image: 'Images', document: 'Docs', code: 'Code',
@@ -217,8 +224,9 @@
     adminClose.addEventListener('click', () => adminOverlay.classList.remove('open'));
     adminOverlay.addEventListener('click', e => { if (e.target === adminOverlay) adminOverlay.classList.remove('open'); });
 
-    authBtn.addEventListener('click', () => {
-        if (adminPass.value === ADMIN_PASS) {
+    authBtn.addEventListener('click', async () => {
+        const inputHash = await sha256(adminPass.value);
+        if (inputHash === ADMIN_HASH) {
             isAdmin = true;
             authGate.style.display = 'none';
             uploadForm.style.display = 'flex';
