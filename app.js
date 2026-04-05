@@ -315,8 +315,6 @@ document.querySelector('.logo').addEventListener('click', e => {
     }
 });
 
-// Also open via URL hash: #admin
-if (window.location.hash === '#admin') openAdmin();
 adminClose.addEventListener('click', () => adminOverlay.classList.remove('open'));
 adminOverlay.addEventListener('click', e => { if (e.target === adminOverlay) adminOverlay.classList.remove('open'); });
 
