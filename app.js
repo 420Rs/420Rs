@@ -193,7 +193,7 @@
         lbBody.innerHTML = `
       ${imgHtml}
       <div class="lb-content">
-        <span class="lb-cat">${CAT_LABELS[r.cat]}</span>
+        <span class="lb-cat">${getCatLabel(r.cat)}</span>
         <h2 class="lb-title">${esc(r.name)}</h2>
         ${r.desc ? `<p class="lb-desc">${esc(r.desc)}</p>` : ''}
         ${r.tags.length ? `<div class="lb-tags">${tagsHtml}</div>` : ''}
@@ -367,19 +367,82 @@
     });
 
     // ===== MANAGE LIST =====
+    let editingId = null;
+
     function renderManage() {
         const all = load();
-        if (!all.length) { manageItems.innerHTML = '<p style="color:var(--text-light);font-size:0.85rem;">Chưa có tài nguyên.</p>'; return; }
-        manageItems.innerHTML = all.map(r => `
+        const cats = loadCats();
+        if (!all.length) { manageItems.innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem;">Chưa có tài nguyên.</p>'; return; }
+        manageItems.innerHTML = all.map(r => {
+            if (editingId === r.id) {
+                return `
+      <div class="manage-edit-form" data-edit-id="${r.id}">
+        <input type="text" class="input" data-field="name" value="${esc(r.name)}" placeholder="Tên">
+        <select class="input" data-field="cat">
+          ${Object.entries(cats).map(([k, v]) => `<option value="${k}" ${r.cat === k ? 'selected' : ''}>${esc(v)}</option>`).join('')}
+        </select>
+        <textarea class="input" data-field="desc" rows="2" placeholder="Mô tả">${esc(r.desc || '')}</textarea>
+        <input type="url" class="input" data-field="url" value="${esc(r.url)}" placeholder="Link">
+        <input type="text" class="input" data-field="tags" value="${r.tags.join(', ')}" placeholder="Tags">
+        <div class="auth-row">
+          <button class="btn-primary btn-full" data-save="${r.id}">Lưu</button>
+          <button class="lb-close-btn" data-cancel-edit>Huỷ</button>
+        </div>
+      </div>`;
+            }
+            return `
       <div class="manage-item">
         <span class="manage-item-name">${esc(r.name)}</span>
-        <button class="manage-del" data-del="${r.id}" title="Xoá">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-        </button>
-      </div>
-    `).join('');
+        <div style="display:flex;gap:4px;">
+          <button class="manage-del" data-edit="${r.id}" title="Sửa">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+          <button class="manage-del" data-del="${r.id}" title="Xoá">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          </button>
+        </div>
+      </div>`;
+        }).join('');
 
-        $$('.manage-del').forEach(btn => {
+        // Edit button
+        $$('[data-edit]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                editingId = btn.dataset.edit;
+                renderManage();
+            });
+        });
+
+        // Save edit
+        $$('[data-save]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id = btn.dataset.save;
+                const form = btn.closest('[data-edit-id]');
+                const all = load();
+                const item = all.find(x => x.id === id);
+                if (!item) return;
+                item.name = form.querySelector('[data-field="name"]').value.trim();
+                item.cat = form.querySelector('[data-field="cat"]').value;
+                item.desc = form.querySelector('[data-field="desc"]').value.trim();
+                item.url = form.querySelector('[data-field="url"]').value.trim();
+                item.tags = form.querySelector('[data-field="tags"]').value.split(',').map(t => t.trim()).filter(Boolean);
+                save(all);
+                editingId = null;
+                render();
+                renderManage();
+                toast('Đã cập nhật!', 'success');
+            });
+        });
+
+        // Cancel edit
+        $$('[data-cancel-edit]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                editingId = null;
+                renderManage();
+            });
+        });
+
+        // Delete
+        $$('[data-del]').forEach(btn => {
             btn.addEventListener('click', () => {
                 const id = btn.dataset.del;
                 if (!confirm('Xoá tài nguyên này?')) return;
