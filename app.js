@@ -77,10 +77,14 @@ async function save(item) {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(item)
         });
+        if (!res.ok) throw new Error(await res.text());
         const savedItem = await res.json();
         item.savedId = savedItem.id;
         fetchAll();
-    } catch (e) { console.error("Error saving doc", e); }
+    } catch (e) {
+        console.error("Error saving doc", e);
+        toast('Lỗi khi lưu (Có thể ảnh quá nặng)!', 'error');
+    }
 }
 
 async function del(mockApiId) {
@@ -352,9 +356,24 @@ thumbFile.addEventListener('change', e => { if (e.target.files[0]) processThumb(
 
 function processThumb(file) {
     if (file.size > 5 * 1024 * 1024) { toast('File quá lớn (max 5MB)', 'error'); return; }
+
+    // Nén ảnh để giảm dung lượng file xuống cực nhẹ (tránh lỗi MockAPI payload limit)
+    const img = new Image();
     const reader = new FileReader();
-    reader.onload = e => {
-        thumbData = e.target.result;
+    reader.onload = e => { img.src = e.target.result; };
+    img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 400; // Resize cực nhỏ
+        let width = img.width;
+        let height = img.height;
+        if (width > MAX_WIDTH) { height = height * (MAX_WIDTH / width); width = MAX_WIDTH; }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // Tỷ lệ nén siêu cao 50%
+        thumbData = canvas.toDataURL('image/jpeg', 0.5);
         thumbImg.src = thumbData;
         thumbPreview.style.display = 'inline-block';
         dropArea.style.display = 'none';
