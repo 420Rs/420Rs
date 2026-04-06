@@ -257,6 +257,9 @@ function openLightbox(r) {
           <button class="lb-share-btn" data-share-id="${r.id}" title="Chia sẻ">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
           </button>
+          <button class="lb-share-btn" data-copy-id="${r.id}" title="Copy Link">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+          </button>
           <button class="lb-close-btn" id="lbCloseInner">Close</button>
         </div>
       </div>
@@ -307,6 +310,27 @@ function openLightbox(r) {
             document.execCommand('copy');
             document.body.removeChild(dummy);
             toast('Đã copy Link chia sẻ!', 'success');
+        }
+    });
+
+    const copyBtn = lbBody.querySelector('[data-copy-id]');
+    if (copyBtn) copyBtn.addEventListener('click', async () => {
+        const item = load().find(x => x.id === r.id);
+        if (!item) return;
+
+        const shareUrl = window.location.origin + window.location.pathname + "?id=" + item.id;
+
+        try {
+            await navigator.clipboard.writeText(shareUrl);
+            toast('Đã copy Link trực tiếp!', 'info');
+        } catch (e) {
+            const dummy = document.createElement('input');
+            document.body.appendChild(dummy);
+            dummy.value = shareUrl;
+            dummy.select();
+            document.execCommand('copy');
+            document.body.removeChild(dummy);
+            toast('Đã copy Link trực tiếp!', 'info');
         }
     });
 
