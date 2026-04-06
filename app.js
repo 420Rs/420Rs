@@ -582,9 +582,15 @@ document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
         adminOverlay.classList.remove('open');
         lightbox.classList.remove('open');
+        $('#donateOverlay').classList.remove('open');
         history.replaceState(null, '', window.location.pathname);
     }
 });
+
+// ===== DONATE UI =====
+$('#donateBtn').addEventListener('click', () => $('#donateOverlay').classList.add('open'));
+$('#donateClose').addEventListener('click', () => $('#donateOverlay').classList.remove('open'));
+$('#donateOverlay').addEventListener('click', e => { if (e.target === $('#donateOverlay')) $('#donateOverlay').classList.remove('open'); });
 
 // ===== INIT =====
 fetchAll();

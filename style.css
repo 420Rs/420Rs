@@ -932,6 +932,104 @@ select.input {
     }
 }
 
+/* ====== DONATE ====== */
+.donate-fab {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #e11d48;
+    /* Red rose */
+    color: #fff;
+    border: none;
+    box-shadow: 0 8px 24px rgba(225, 29, 72, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 90;
+    transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+    animation: heartbeat 2s infinite cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.donate-fab:hover {
+    transform: translateY(-3px) scale(1.05);
+    background: #be123c;
+    animation: none;
+}
+
+@keyframes heartbeat {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    15% {
+        transform: scale(1.15);
+    }
+
+    30% {
+        transform: scale(1);
+    }
+
+    45% {
+        transform: scale(1.15);
+    }
+
+    60% {
+        transform: scale(1);
+    }
+}
+
+.donate-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    z-index: 300;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+.donate-overlay.open {
+    display: flex;
+}
+
+.donate-modal {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    padding: 32px;
+    text-align: center;
+    position: relative;
+    width: 320px;
+    max-width: 90vw;
+    animation: zoomIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.donate-modal h3 {
+    margin-bottom: 4px;
+    font-size: 1.3rem;
+}
+
+.donate-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+
+.donate-close:hover {
+    color: var(--text-primary);
+}
+
 /* ====== RESPONSIVE ====== */
 @media (max-width: 1200px) {
     .masonry {
