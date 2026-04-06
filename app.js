@@ -288,13 +288,25 @@ function openLightbox(r) {
 
         try {
             if (navigator.share) {
-                await navigator.share(shareData);
+                try {
+                    await navigator.share(shareData);
+                } catch (err) {
+                    await navigator.clipboard.writeText(shareUrl);
+                    toast('Đã copy Link chia sẻ!', 'success');
+                }
             } else {
                 await navigator.clipboard.writeText(shareUrl);
-                toast('Đã copy Link chia sẻ trực tiếp!', 'success');
+                toast('Đã copy Link chia sẻ!', 'success');
             }
         } catch (e) {
-            console.error(e);
+            // Cú chót nếu clipboard api lỗi
+            const dummy = document.createElement('input');
+            document.body.appendChild(dummy);
+            dummy.value = shareUrl;
+            dummy.select();
+            document.execCommand('copy');
+            document.body.removeChild(dummy);
+            toast('Đã copy Link chia sẻ!', 'success');
         }
     });
 
