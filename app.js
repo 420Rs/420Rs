@@ -60,6 +60,16 @@ async function fetchAll() {
         renderFilterChips();
         render();
         if (isAdmin) renderManage();
+
+        // Check if user came from a share link
+        const urlParams = new URLSearchParams(window.location.search);
+        const sharedId = urlParams.get('id');
+        if (sharedId) {
+            const sharedItem = allResources.find(x => x.id === sharedId);
+            if (sharedItem) openLightbox(sharedItem);
+            // Clean the URL up so it doesn't stay there if they refresh
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
     } catch (e) {
         console.error("Fetch error", e);
     }
@@ -244,6 +254,9 @@ function openLightbox(r) {
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             Open / Download
           </a>
+          <button class="lb-share-btn" data-share-id="${r.id}" title="Chia sẻ">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          </button>
           <button class="lb-close-btn" id="lbCloseInner">Close</button>
         </div>
       </div>
@@ -258,6 +271,30 @@ function openLightbox(r) {
             save(item);
             // Updating UI instantly
             dlBtn.innerHTML = `${item.dl} <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`;
+        }
+    });
+
+    const shareBtn = lbBody.querySelector('[data-share-id]');
+    if (shareBtn) shareBtn.addEventListener('click', async () => {
+        const item = load().find(x => x.id === r.id);
+        if (!item) return;
+
+        const shareUrl = window.location.origin + window.location.pathname + "?id=" + item.id;
+        const shareData = {
+            title: item.name + " - 420RS",
+            text: item.desc || "Xem tài nguyên cực xịn này trên 420RS!",
+            url: shareUrl
+        };
+
+        try {
+            if (navigator.share) {
+                await navigator.share(shareData);
+            } else {
+                await navigator.clipboard.writeText(shareUrl);
+                toast('Đã copy Link chia sẻ trực tiếp!', 'success');
+            }
+        } catch (e) {
+            console.error(e);
         }
     });
 

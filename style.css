@@ -845,8 +845,9 @@ select.input {
     transform: translateY(-1px);
 }
 
-.lb-close-btn {
-    padding: 11px 20px;
+.lb-close-btn,
+.lb-share-btn {
+    padding: 11px 16px;
     background: var(--surface);
     border: 1px solid var(--border);
     color: var(--text-secondary);
@@ -857,7 +858,8 @@ select.input {
     transition: background 0.15s;
 }
 
-.lb-close-btn:hover {
+.lb-close-btn:hover,
+.lb-share-btn:hover {
     background: var(--surface-hover);
 }
 
