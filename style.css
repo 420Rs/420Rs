@@ -847,6 +847,9 @@ select.input {
 
 .lb-close-btn,
 .lb-share-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     padding: 11px 16px;
     background: var(--surface);
     border: 1px solid var(--border);
