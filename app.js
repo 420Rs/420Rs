@@ -461,8 +461,9 @@ function renderManage() {
           ${Object.entries(cats).map(([k, v]) => `<option value="${k}" ${r.cat === k ? 'selected' : ''}>${esc(v)}</option>`).join('')}
         </select>
         <textarea class="input" data-field="desc" rows="2" placeholder="Mô tả">${esc(r.desc || '')}</textarea>
-        <input type="url" class="input" data-field="url" value="${esc(r.url)}" placeholder="Link">
-        <input type="text" class="input" data-field="tags" value="${r.tags.join(', ')}" placeholder="Tags">
+        <input type="url" class="input" data-field="url" value="${esc(r.url)}" placeholder="Link Tải / Download Link">
+        <input type="url" class="input" data-field="thumb" value="${esc(r.thumb || '')}" placeholder="Link Ảnh Đại Diện (Tuỳ chọn)">
+        <input type="text" class="input" data-field="tags" value="${r.tags.join(', ')}" placeholder="Tags (Cấp theo dấu phẩy)">
         <div class="auth-row">
           <button class="btn-primary btn-full" data-save="${r.id}">Lưu</button>
           <button class="lb-close-btn" data-cancel-edit>Huỷ</button>
@@ -503,6 +504,7 @@ function renderManage() {
             item.cat = form.querySelector('[data-field="cat"]').value;
             item.desc = form.querySelector('[data-field="desc"]').value.trim();
             item.url = form.querySelector('[data-field="url"]').value.trim();
+            item.thumb = form.querySelector('[data-field="thumb"]').value.trim();
             item.tags = form.querySelector('[data-field="tags"]').value.split(',').map(t => t.trim()).filter(Boolean);
             save(item);
             editingId = null;
